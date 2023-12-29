@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Jarvis March</title>
+</head>
+
+<body>
+    <input placeholder="Enter Number Of Points  " id="hi" />
+    <button onclick="GenratePoints()">Go</button>
+    <div id="lineAndMarkerPlot"></div>
+    <script>
+        var opp,adj;
+        var check = false;
+        var x = [];
+        var y = [];
+        var X_hull = [];
+        var Y_hull = [];
+        var polarAngle = [];
+        var track = [];
+        var i = 0;
+        var count = 0;
+        var Bool = [];
+        var a;
+        var b;
+        var pp;
+        var stoop = 0;
+        var miny;
+        var maxy;
+        function GenratePoints() {
+            var p = document.getElementById('hi').value;
+            pp = parseInt(p);
+            a = 0;
+            b = 0;
+            for(i=0;i<pp;i++){
+                x[i] = Math.floor(Math.random() * (250 - (-250) + 1)) + (-250);
+                y[i] = Math.floor(Math.random() * (250 - (-250) + 1)) + (-250);
+            }
+            for(var i=0;i<pp;i++){
+                Bool[i] = 0;
+            }
+            const up = {
+                x: x, y: y, type: 'scatter', mode: 'markers', marker: { color: 'green' }
+            };
+            //const connectedPoints = {
+            //    x: [x[3],x[4],x[5]] , y: [y[3],y[4],y[5]],type: 'scatter',mode: 'lines+markers',line:{color:'red'},marker:{color:'green'}
+            //};
+            console.log(x, y);
+            const layout = {
+                title: 'CONVEX HULL (Jarvis March)',
+                xaxis: { title: 'X-axis' },
+                yaxis: { title: 'Y-axis' }
+            };
+            Plotly.newPlot('lineAndMarkerPlot', [up], layout);
+            miny = y.indexOf(Math.min(...y));
+            maxy = y.indexOf(Math.max(...y));
+
+
+           //Bool[miny] = 1;
+            
+            X_hull.push(x[miny])
+            Y_hull.push(y[miny]);
+            console.log(miny, '--->', y[miny]);
+            setTimeout(() => {
+                CalculatePolarAngle(miny, a, b, up);
+            }, 500);
+        }
+        function CalculatePolarAngle(index, p1, p2, up) {
+            //console.log(index)
+            //var gradient;
+            var theta;
+            if (p1 != index && p2 != index && Bool[p1] != 1) {
+                if (p1 < pp && p2 < pp) {
+                    var cp = {
+                        x: [x[index], x[p1]], y: [y[index], y[p2]], type: 'scatter', mode: 'lines+markers', line: { color: 'blue' }, marker: { color: 'green' }
+                    };
+                    var layout = {
+                        title: 'CONVEX HULL (Jarvis March)',
+                        xaxis: { title: 'X-axis' },
+                        yaxis: { title: 'Y-axis' }
+                    };
+                    Plotly.newPlot('lineAndMarkerPlot', [cp, up], layout);
+                    //gradient = (y[p2] - y[index]) / (x[p1] - x[index]);
+                    //console.log(gradient);
+                    if (check === false){
+                        if(y[index] <= y[p2]){
+                            if(x[index] <= x[p1]){
+                                adj = x[p1] - x[index];
+                                opp = y[p2] - y[index];
+                                theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                            }
+                            else if(x[index] > x[p1]){
+                                adj = x[index] - x[p1];
+                                opp = y[p2] - y[index];
+                                theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                                theta = 180 - theta ;
+                            }
+                        }
+                        else{
+                            if(x[index] >= x[p1]){
+                                adj = x[index] - x[p1];
+                                opp = y[index] - y[p2];
+                                theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                                theta = 180 + theta;
+                            }
+                            else if(x[index] < x[p1]){
+                                adj = x[p1] - x[index];
+                                opp = y[index] - y[p2];
+                                theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                                theta = 360 - theta;
+                            }
+                        } 
+                    }
+                    else{
+                        console.log("hello");
+                            if(x[index] >= x[p1]){
+                                    adj = x[index] - x[p1];
+                                    opp = y[index] - y[p2];
+                                    theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                                    theta = 180 + theta;
+                            }
+                            else if(x[index] < x[p1]){
+                                    adj = x[p1] - x[index];
+                                    opp = y[index] - y[p2];
+                                    theta = (Math.atan(opp/adj)) * (180/Math.PI);
+                                    theta = 360 - theta;
+                            } 
+                                
+                    }       
+                    polarAngle.push(theta);
+                    track.push(p1);
+                    //console.log(track);
+                    setTimeout(() => {
+                        CalculatePolarAngle(index, p1 + 1, p2 + 1, up);
+                    }, 10);
+                }
+                else {
+                    
+                    JarvisMarch();
+                }
+            }
+            else {
+                setTimeout(() => {
+                    CalculatePolarAngle(index, p1 + 1, p2 + 1, up);
+                }, 10);
+            }
+
+        }
+        function JarvisMarch() {
+            
+            var Pmin = polarAngle.indexOf(Math.min(...polarAngle));
+            X_hull.push(x[track[Pmin]]);
+            Y_hull.push(y[track[Pmin]]);
+            Bool[track[Pmin]] = 1;
+             
+            console.log(polarAngle,X_hull,Y_hull,Bool);
+            console.log(X_hull,Y_hull,Bool);
+            cp = {
+                x:X_hull,y:Y_hull,type:'scatter',mode:'lines+markers',line:{color:'red'},marker:{color:'black'}
+            }; 
+            var layout = {
+                title: 'CONVEX HULL (Jarvis March)',
+                xaxis: { title: 'X-axis' },
+                yaxis: { title: 'Y-axis' }
+            };
+            const up= {
+                x: x , y: y ,type: 'scatter',mode: 'markers',marker:{color:'green'}
+            };
+            Plotly.newPlot('lineAndMarkerPlot', [up,cp], layout);
+            //console.log("---<>>><>",stoop);
+            //console.log("---<>>><>",count);
+            if(Y_hull.includes(y[maxy])){
+                check = true;
+            } 
+            if(X_hull[X_hull.length-1] != x[miny] && Y_hull[Y_hull.length-1] != y[miny]){
+                console.log("enter");
+                polarAngle = [];
+                //console.log(polarAngle);
+                var tp = track[Pmin];
+                track = [];
+                setTimeout(() => {
+                    CalculatePolarAngle(tp,0,0,up);    
+                }, 10);
+                
+            }
+            else{
+                return;
+            }
+        
+        }
+
+    </script>
+
+</body>
+
+</html>

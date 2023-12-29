@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <title>Monotone Chain Convex Hull</title>
+</head>
+<body>
+    <input placeholder="Enter Number Of Points" id="hi"/>
+    <button onclick="GeneratePoints()">Go</button>
+    <div id="lineAndMarkerPlot"></div>
+
+    <script>
+        var x = [];
+        var y = [];
+        var Ux = [];
+        var Uy = [];
+        var Lx = [];
+        var Ly = [];
+        var pp;
+
+        function GeneratePoints() {
+            var p = document.getElementById('hi').value;
+            pp = parseInt(p);
+
+            // Generate random points
+            for (var i = 0; i < pp; i++) {
+                x[i] = Math.floor(Math.random() * (50 - (-50) + 1)) + (-50);
+                y[i] = Math.floor(Math.random() * (50 - (-50) + 1)) + (-50);
+            }
+
+            const up = {
+                x: x,
+                y: y,
+                type: "scatter",
+                mode: "markers",
+                marker: { color: "green" }
+            };
+
+            const layout = {
+                title: "CONVEX HULL (MONOTONE CHAIN)",
+                xaxis: { title: "X Axis" },
+                yaxis: { title: "Y AXIS" }
+            };
+
+            Plotly.newPlot('lineAndMarkerPlot', [up], layout);
+
+            Sort();
+            MonotoneChainLower();
+            MonotoneChainUpper();
+            FinalHull();
+        }
+
+        function Sort() {
+            let indices = Array.from(x.keys());
+            indices.sort((a, b) => {
+                if (x[a] !== x[b]) {
+                    return x[a] - x[b];
+                }
+                return y[a] - y[b];
+            });
+
+            x = indices.map(index => x[index]);
+            y = indices.map(index => y[index]);
+        }
+
+        function CrossProduct(x1, y1, x2, y2, x3, y3) {
+            return x1 * (y2 - y3) - y1 * (x2 - x3) + (x2 * y3 - y2 * x3);
+        }
+
+        function MonotoneChainLower() {
+            for (var i = 0; i < x.length; i++) {
+                while (Lx.length >= 2 && CrossProduct(Lx[Lx.length - 2], Ly[Ly.length - 2], Lx[Lx.length - 1], Ly[Ly.length - 1], x[i], y[i]) <= 0) {
+                    Lx.pop();
+                    Ly.pop();
+                }
+                Lx.push(x[i]);
+                Ly.push(y[i]);
+            }
+        }
+
+        function MonotoneChainUpper() {
+            for (var i = x.length - 1; i >= 0; i--) {
+                while (Ux.length >= 2 && CrossProduct(Ux[Ux.length - 2], Uy[Uy.length - 2], Ux[Ux.length - 1], Uy[Uy.length - 1], x[i], y[i]) <= 0) {
+                    Ux.pop();
+                    Uy.pop();
+                }
+                Ux.push(x[i]);
+                Uy.push(y[i]);
+            }
+        }
+
+        function FinalHull() {
+            Ux.pop();
+            Uy.pop();
+            Lx.pop();
+            Ly.pop();
+            var convexHullX = [...Lx, ...Ux];
+            var convexHullY = [...Ly, ...Uy];
+
+           convexHullX.push(convexHullX[0]);
+           convexHullY.push(convexHullY[0]);
+            setTimeout(() => {
+                const up = {
+                    x: x,
+                    y: y,
+                    type: "scatter",
+                    mode: "markers",
+                    marker: { color: "green" }
+                };
+                const cp = {
+                    x:convexHullX , y:convexHullY , type:"scatter",mode:"lines+markers",
+                    marker:{color:"black"},line:{color:"red"}
+                };
+                const layout = {
+                    title: "CONVEX HULL (MONOTONE CHAIN)",
+                    xaxis: { title: "X Axis" },
+                    yaxis: { title: "Y AXIS" }
+                };
+
+                Plotly.newPlot('lineAndMarkerPlot', [cp,up], layout);
+            }, 1000);
+            
+        }
+    </script>
+</body>
+</html>

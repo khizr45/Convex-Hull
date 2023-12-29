@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convex Hull Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+    <input placeholder="Number of points" id="p"/>
+    <button onclick="main()">Go</button>
+    <div id="plot"></div>
+
+    <script>
+        function convexHull(points) {
+            if (points.length < 3) {
+                return points;
+            }
+            points.sort((a, b) => a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1]);
+            const upper = [];
+            const lower = [];
+            for (const point of points) {
+                while (upper.length >= 2 && isNotRightTurn(upper[upper.length - 2], 
+                    upper[upper.length - 1], point)) {
+                    upper.pop();
+                }
+                upper.push(point);
+            }
+            for (let i = points.length - 1; i >= 0; i--) {
+                const point = points[i];
+                while (lower.length >= 2 && isNotRightTurn(lower[lower.length - 2], 
+                    lower[lower.length - 1], point)) {
+                    lower.pop();
+                }
+                lower.push(point);
+            }
+            const hull = new Set([...upper, ...lower]);
+            return Array.from(hull);
+        }
+        function isNotRightTurn(a, b, c) {
+            return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]) <= 0;
+        }
+        function main() {
+            let X_hull = [];
+            let Y_hull = [];
+            let cols = 2;
+            let points = [];
+            let x = [];
+            let y = [];
+            let p = document.getElementById("p").value;
+            let pp = parseInt(p);
+            for (let i = 0; i < pp; i++) {
+                let row = [];
+                for (let j = 0; j < cols; j++) {
+                    let randomNumber = Math.floor(Math.random() * (50 - (-50)) + (-50));
+                    row.push(randomNumber);
+                }
+                points.push(row);
+            }
+            console.log(points);
+
+            const hull = convexHull(points);
+            for (const point of hull) {
+                X_hull.push(point[0]);
+                Y_hull.push(point[1]);
+            }
+
+            let n = points.length;
+            for (let i = 0; i < n; i++) {
+                x.push(points[i][0]);
+                y.push(points[i][1]);
+            }
+            X_hull.push(X_hull[0]);
+            Y_hull.push(Y_hull[0]);
+            const up = {
+                x:x, y:y, type:"scatter", mode:"markers"
+            }
+           const layout = {
+                title: "CONVEX HULL (BRUTE FORCE)",
+                xaxis: { title: "X Axis" },
+                yaxis: { title: "Y AXIS" }
+           }
+           const cp = {
+                x:X_hull , y:Y_hull, type:"scatter",mode:"lines+markers",marker:{color:"black"},line:{color:"red"}
+            };
+
+            Plotly.newPlot('plot',[up],layout);
+            setTimeout(() => {
+                Plotly.newPlot('plot',[up,cp],layout);
+            }, 5000);
+            
+        }
+    </script>
+</body>
+</html>
